@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>饭团BD｜GMV & 收益快速测算（H5 Demo）</title>
+  <style>
+    :root { --radius: 14px; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif;
+           margin: 0; background:#f6f7fb; color:#111; }
+    header { padding: 18px 16px; background: #111; color:#fff; }
+    header h1 { margin: 0; font-size: 18px; }
+    header p { margin: 6px 0 0; opacity: .85; font-size: 13px; line-height: 1.4; }
+    .container { max-width: 980px; margin: 0 auto; padding: 16px; }
+    .grid { display: grid; gap: 12px; }
+    @media (min-width: 900px) { .grid.cols2 { grid-template-columns: 1.1fr .9fr; } }
+    .card { background:#fff; border-radius: var(--radius); box-shadow: 0 6px 18px rgba(15,23,42,.06);
+            padding: 14px; }
+    .card h2 { margin: 0 0 10px; font-size: 15px; }
+    .row { display:flex; gap:10px; flex-wrap: wrap; }
+    .field { flex: 1 1 180px; }
+    label { display:block; font-size: 12px; color:#444; margin-bottom: 6px; }
+    input, select { width: 100%; padding: 10px 10px; border:1px solid #e5e7eb; border-radius: 10px;
+                    font-size: 14px; background:#fff; }
+    input:focus, select:focus { outline: none; border-color:#111; box-shadow: 0 0 0 3px rgba(17,17,17,.08); }
+    .hint { font-size: 12px; color:#666; line-height: 1.4; margin-top: 8px; }
+    .pillbar { display:flex; gap:8px; flex-wrap: wrap; margin-top: 8px; }
+    .pill { border:1px solid #e5e7eb; background:#fff; border-radius: 999px; padding: 8px 10px; font-size: 13px;
+            cursor:pointer; user-select:none; }
+    .pill.active { border-color:#111; background:#111; color:#fff; }
+    .kpi { display:grid; gap: 10px; }
+    @media (min-width: 700px) { .kpi { grid-template-columns: repeat(2, 1fr); } }
+    .kpi .box { border:1px solid #eef0f3; border-radius: var(--radius); padding: 12px; background:#fff; }
+    .kpi .box .t { font-size: 12px; color:#666; }
+    .kpi .box .v { font-size: 20px; margin-top: 4px; font-weight: 700; }
+    .kpi .box .s { font-size: 12px; margin-top: 6px; color:#444; opacity:.9; }
+    .subtle { font-size: 12px; color:#555; }
+    table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: var(--radius); }
+    th, td { padding: 10px; border-bottom:1px solid #eef0f3; font-size: 13px; text-align: right; }
+    th { background:#fafafa; color:#333; font-weight: 600; }
+    td:first-child, th:first-child { text-align: left; }
+    .warn { background:#fff7ed; border:1px solid #fed7aa; color:#7c2d12; border-radius: var(--radius);
+            padding: 10px; font-size: 12px; line-height: 1.4; }
+    footer { padding: 18px 16px; color:#666; font-size: 12px; line-height: 1.5; }
+    .btnrow { display:flex; gap:10px; flex-wrap: wrap; margin-top: 10px; }
+    button { border:0; background:#111; color:#fff; padding: 10px 12px; border-radius: 12px; font-size: 13px; cursor:pointer; }
+    button.secondary { background:#fff; color:#111; border:1px solid #e5e7eb; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>饭团BD｜GMV & 收益快速测算（H5 Demo）</h1>
+  <p>用于现场和商户快速对齐“上线后可能带来的增量GMV / 商户增量利润 / 平台佣金收入”。（基于假设测算，非承诺）</p>
+</header>
+
+<div class="container">
+  <div class="grid cols2">
+    <section class="card">
+      <h2>① 商户现状输入（任选一种方式）</h2>
+
+      <div class="row">
+        <div class="field">
+          <label>输入方式</label>
+          <select id="mode">
+            <option value="orders">按“日订单数”输入（推荐：更准确）</option>
+            <option value="traffic">按“日客流×转化率”输入</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>营业天数 / 月</label>
+          <input id="days" type="number" min="1" max="31" step="1" value="30" />
+        </div>
+      </div>
+
+      <div id="ordersBlock" class="row">
+        <div class="field">
+          <label>日订单数（当前）</label>
+          <input id="ordersPerDay" type="number" min="0" step="1" value="80" />
+        </div>
+        <div class="field">
+          <label>客单价 AOV（$）</label>
+          <input id="aov" type="number" min="0" step="0.1" value="22" />
+        </div>
+      </div>
+
+      <div id="trafficBlock" class="row" style="display:none;">
+        <div class="field">
+          <label>日客流（进店人数）</label>
+          <input id="traffic" type="number" min="0" step="1" value="250" />
+        </div>
+        <div class="field">
+          <label>转化率（来的人里下单比例）</label>
+          <input id="conv" type="number" min="0" max="1" step="0.01" value="0.25" />
+        </div>
+        <div class="field">
+          <label>客单价 AOV（$）</label>
+          <input id="aov2" type="number" min="0" step="0.1" value="22" />
+        </div>
+      </div>
+
+      <div class="hint">
+        小技巧：如果商户不愿意给“客流”，就直接问“平均一天多少单？”会更容易拿到数据。
+      </div>
+
+      <h2 style="margin-top:14px;">② 上线饭团后的假设（可现场调参）</h2>
+      <div class="row">
+        <div class="field">
+          <label>订单提升（uplift）</label>
+          <input id="upliftOrders" type="number" min="-0.9" step="0.01" value="0.20" />
+          <div class="hint">0.20 = +20%</div>
+        </div>
+        <div class="field">
+          <label>客单提升（可选）</label>
+          <input id="upliftAov" type="number" min="-0.9" step="0.01" value="0.03" />
+          <div class="hint">0.03 = +3%（套餐/加购带来）</div>
+        </div>
+        <div class="field">
+          <label>抽佣率（commission）</label>
+          <input id="commission" type="number" min="0" max="1" step="0.01" value="0.20" />
+          <div class="hint">0.20 = 20%</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>食材成本率 COGS（商户）</label>
+          <input id="cogs" type="number" min="0" max="1" step="0.01" value="0.35" />
+          <div class="hint">餐饮常见 0.30–0.40</div>
+        </div>
+        <div class="field">
+          <label>增量额外成本 / 单（可选）</label>
+          <input id="extraPerOrder" type="number" min="0" step="0.1" value="0.6" />
+          <div class="hint">包装/人工等，默认 $0.6</div>
+        </div>
+        <div class="field">
+          <label>广告预算 / 月（可选）</label>
+          <input id="adBudget" type="number" min="0" step="10" value="0" />
+          <div class="hint">用于计算“回本周期”</div>
+        </div>
+      </div>
+
+      <div class="pillbar" aria-label="快捷情景">
+        <div class="pill active" data-scenario="mid">中性：+20% 订单</div>
+        <div class="pill" data-scenario="low">保守：+10% 订单</div>
+        <div class="pill" data-scenario="high">激进：+35% 订单</div>
+        <div class="pill" data-scenario="reset">恢复默认</div>
+      </div>
+
+      <div class="btnrow">
+        <button id="calcBtn">立即测算</button>
+        <button class="secondary" id="shareBtn">复制结果摘要</button>
+      </div>
+
+      <div class="hint mono" id="copied" style="display:none;">已复制到剪贴板 ✅</div>
+    </section>
+
+    <aside class="card">
+      <h2>结果（核心4张卡）</h2>
+      <div class="kpi">
+        <div class="box">
+          <div class="t">当前月GMV（基准）</div>
+          <div class="v" id="gmvBase">$0</div>
+          <div class="s" id="baseDetails">—</div>
+        </div>
+        <div class="box">
+          <div class="t">上线后月GMV（假设）</div>
+          <div class="v" id="gmvNew">$0</div>
+          <div class="s" id="upliftDetails">—</div>
+        </div>
+        <div class="box">
+          <div class="t">商户每月增量利润（估算）</div>
+          <div class="v" id="merchantProfit">$0</div>
+          <div class="s" id="merchantDetails">—</div>
+        </div>
+        <div class="box">
+          <div class="t">平台每月佣金收入（估算）</div>
+          <div class="v" id="platformRevenue">$0</div>
+          <div class="s" id="platformDetails">—</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;" class="warn">
+        说明：该工具用于“快速对齐预期”。提升（uplift）受评分、菜单结构、配送范围、时段运营、广告投放等影响。
+        建议用“保守/中性/激进”三档展示，避免拍脑袋。
+      </div>
+
+      <h2 style="margin-top:14px;">敏感性分析（3档情景）</h2>
+      <div class="subtle" style="margin-bottom:8px;">固定其他参数不变，仅改变“订单提升”。</div>
+      <table>
+        <thead>
+          <tr>
+            <th>情景</th>
+            <th>订单提升</th>
+            <th>上线后GMV</th>
+            <th>商户增量利润</th>
+            <th>平台佣金</th>
+          </tr>
+        </thead>
+        <tbody id="sensBody"></tbody>
+      </table>
+
+      <h2 style="margin-top:14px;">可选：广告回本周期</h2>
+      <div class="subtle" id="payback">—</div>
+    </aside>
+  </div>
+</div>
+
+<footer class="container">
+  <div>提示：如果你要把它当 work sample 展示，建议加上（1）输入来源说明，（2）默认值依据，（3）“不构成承诺”的免责声明。</div>
+</footer>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  function fmtMoney(n) {
+    if (!isFinite(n)) return "—";
+    const sign = n < 0 ? "-" : "";
+    n = Math.abs(n);
+    return sign + "$" + n.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  }
+  function fmtPct(x) {
+    if (!isFinite(x)) return "—";
+    return (x * 100).toFixed(0) + "%";
+  }
+  function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+  }
+
+  function readInputs() {
+    const mode = $("mode").value;
+    const days = clamp(parseFloat($("days").value || "0"), 1, 31);
+
+    let ordersPerDay = 0;
+    let aov = 0;
+
+    if (mode === "orders") {
+      ordersPerDay = Math.max(0, parseFloat($("ordersPerDay").value || "0"));
+      aov = Math.max(0, parseFloat($("aov").value || "0"));
+    } else {
+      const traffic = Math.max(0, parseFloat($("traffic").value || "0"));
+      const conv = clamp(parseFloat($("conv").value || "0"), 0, 1);
+      aov = Math.max(0, parseFloat($("aov2").value || "0"));
+      ordersPerDay = traffic * conv;
+    }
+
+    const upliftOrders = parseFloat($("upliftOrders").value || "0");
+    const upliftAov = parseFloat($("upliftAov").value || "0");
+    const commission = clamp(parseFloat($("commission").value || "0"), 0, 1);
+    const cogs = clamp(parseFloat($("cogs").value || "0"), 0, 1);
+    const extraPerOrder = Math.max(0, parseFloat($("extraPerOrder").value || "0"));
+    const adBudget = Math.max(0, parseFloat($("adBudget").value || "0"));
+
+    return { mode, days, ordersPerDay, aov, upliftOrders, upliftAov, commission, cogs, extraPerOrder, adBudget };
+  }
+
+  function compute({ days, ordersPerDay, aov, upliftOrders, upliftAov, commission, cogs, extraPerOrder }) {
+    const ordersMonth = ordersPerDay * days;
+    const gmvBase = ordersMonth * aov;
+
+    const ordersNew = ordersMonth * (1 + upliftOrders);
+    const aovNew = aov * (1 + upliftAov);
+    const gmvNew = ordersNew * aovNew;
+
+    const deltaGmv = gmvNew - gmvBase;
+
+    // 商户增量利润（简化：对“增量GMV”计算抽佣成本，更贴近“接入带来的新增收益”表达）
+    const deltaGrossProfit = deltaGmv * (1 - cogs);
+    const commissionCostOnDelta = deltaGmv * commission;
+    const extraCost = Math.max(0, (ordersNew - ordersMonth)) * extraPerOrder;
+
+    const merchantDeltaProfit = deltaGrossProfit - commissionCostOnDelta - extraCost;
+
+    // 平台佣金收入（估算：对上线后GMV）
+    const platformCommission = gmvNew * commission;
+
+    return {
+      ordersMonth, gmvBase, ordersNew, aovNew, gmvNew, deltaGmv,
+      merchantDeltaProfit, platformCommission
+    };
+  }
+
+  function render() {
+    const inp = readInputs();
+    const r = compute(inp);
+
+    $("gmvBase").textContent = fmtMoney(r.gmvBase);
+    $("gmvNew").textContent = fmtMoney(r.gmvNew);
+    $("merchantProfit").textContent = fmtMoney(r.merchantDeltaProfit);
+    $("platformRevenue").textContent = fmtMoney(r.platformCommission);
+
+    const ordersDay = inp.ordersPerDay;
+    $("baseDetails").textContent =
+      `${ordersDay.toFixed(0)} 单/天 × ${inp.days} 天 × ${fmtMoney(inp.aov).replace("-", "")} 客单`;
+    $("upliftDetails").textContent =
+      `订单 ${fmtPct(inp.upliftOrders)}，客单 ${fmtPct(inp.upliftAov)}（上线后 AOV=${fmtMoney(r.aovNew).replace("-", "")}）`;
+
+    $("merchantDetails").textContent =
+      `增量GMV ${fmtMoney(r.deltaGmv)}；COGS ${fmtPct(inp.cogs)}；抽佣 ${fmtPct(inp.commission)}`;
+    $("platformDetails").textContent =
+      `佣金 = 上线后GMV × 抽佣率（${fmtPct(inp.commission)}）`;
+
+    // sensitivity
+    const scenarios = [
+      { name: "保守", uplift: 0.10 },
+      { name: "中性", uplift: 0.20 },
+      { name: "激进", uplift: 0.35 },
+    ];
+    const body = scenarios.map(s => {
+      const rr = compute({ ...inp, upliftOrders: s.uplift });
+      return `<tr>
+        <td>${s.name}</td>
+        <td>${fmtPct(s.uplift)}</td>
+        <td>${fmtMoney(rr.gmvNew)}</td>
+        <td>${fmtMoney(rr.merchantDeltaProfit)}</td>
+        <td>${fmtMoney(rr.platformCommission)}</td>
+      </tr>`;
+    }).join("");
+    $("sensBody").innerHTML = body;
+
+    // payback
+    const ad = inp.adBudget;
+    if (ad > 0 && isFinite(r.merchantDeltaProfit) && r.merchantDeltaProfit > 0) {
+      const months = ad / r.merchantDeltaProfit;
+      $("payback").textContent = `若商户每月投放广告预算 ${fmtMoney(ad)}，以当前“增量利润”估算回本约 ${months.toFixed(1)} 个月。`;
+    } else if (ad > 0 && r.merchantDeltaProfit <= 0) {
+      $("payback").textContent = `当前参数下商户增量利润≤0，建议调低抽佣/增量成本，或提高订单提升假设，再评估广告回本。`;
+    } else {
+      $("payback").textContent = "未输入广告预算。";
+    }
+
+    return { inp, r };
+  }
+
+  // mode switching
+  $("mode").addEventListener("change", () => {
+    const m = $("mode").value;
+    $("ordersBlock").style.display = (m === "orders") ? "flex" : "none";
+    $("trafficBlock").style.display = (m === "traffic") ? "flex" : "none";
+    render();
+  });
+
+  // scenario pills
+  document.querySelectorAll(".pill").forEach(p => {
+    p.addEventListener("click", () => {
+      document.querySelectorAll(".pill").forEach(x => x.classList.remove("active"));
+      p.classList.add("active");
+      const s = p.dataset.scenario;
+      if (s === "low") $("upliftOrders").value = "0.10";
+      if (s === "mid") $("upliftOrders").value = "0.20";
+      if (s === "high") $("upliftOrders").value = "0.35";
+      if (s === "reset") {
+        $("upliftOrders").value = "0.20";
+        $("upliftAov").value = "0.03";
+        $("commission").value = "0.20";
+        $("cogs").value = "0.35";
+        $("extraPerOrder").value = "0.6";
+        $("adBudget").value = "0";
+        $("mode").value = "orders";
+        $("ordersBlock").style.display = "flex";
+        $("trafficBlock").style.display = "none";
+      }
+      render();
+    });
+  });
+
+  // calc button
+  $("calcBtn").addEventListener("click", () => render());
+
+  // copy summary
+  $("shareBtn").addEventListener("click", async () => {
+    const { inp, r } = render();
+    const summary =
+`【饭团BD｜GMV测算摘要】
+- 基准：${inp.ordersPerDay.toFixed(0)}单/天 × ${inp.days}天 × AOV ${fmtMoney(inp.aov).replace("-", "")} → GMV ${fmtMoney(r.gmvBase)}
+- 假设：订单提升 ${fmtPct(inp.upliftOrders)}，客单提升 ${fmtPct(inp.upliftAov)}，抽佣 ${fmtPct(inp.commission)}
+- 上线后GMV：${fmtMoney(r.gmvNew)}（增量 ${fmtMoney(r.deltaGmv)}）
+- 商户增量利润（估算）：${fmtMoney(r.merchantDeltaProfit)}（COGS ${fmtPct(inp.cogs)}，增量成本/单 $${inp.extraPerOrder}）
+- 平台佣金（估算）：${fmtMoney(r.platformCommission)}
+※ 以上为基于假设的快速测算，不构成业绩承诺。`;
+    try {
+      await navigator.clipboard.writeText(summary);
+      $("copied").style.display = "block";
+      setTimeout(() => $("copied").style.display = "none", 1400);
+    } catch (e) {
+      alert("复制失败：浏览器可能不允许剪贴板访问。你可以手动选中复制。");
+      console.log(e);
+    }
+  });
+
+  // live update
+  ["days","ordersPerDay","aov","traffic","conv","aov2","upliftOrders","upliftAov","commission","cogs","extraPerOrder","adBudget"]
+    .forEach(id => $(id).addEventListener("input", () => render()));
+
+  // initial
+  render();
+</script>
+</body>
+</html>
