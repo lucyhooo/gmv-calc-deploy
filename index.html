@@ -46,6 +46,34 @@
     button { border:0; background:#111; color:#fff; padding: 10px 12px; border-radius: 12px; font-size: 13px; cursor:pointer; }
     button.secondary { background:#fff; color:#111; border:1px solid #e5e7eb; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+/* 1. 优化手机横屏 */
+    @media (orientation: landscape) and (max-height: 500px) {
+        .grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 15px !important;
+        }
+        .container {
+            max-width: 95% !important;
+            padding: 10px !important;
+        }
+        header {
+            margin-bottom: 10px !important;
+        }
+    }
+
+    /* 2. 微调竖屏精致感 */
+    @media (max-width: 900px) {
+        .card {
+            padding: 12px !important;
+        }
+        input, select {
+            padding: 8px !important;
+        }
+        h2 {
+            font-size: 16px !important;
+        }
+    }
+    
   </style>
 </head>
 <body>
